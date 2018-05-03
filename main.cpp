@@ -1,76 +1,81 @@
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- * Copyright by The HDF Group.						     *
- * Copyright by the Board of Trustees of the University of Illinois.	     *
- * All rights reserved.							     *
- *	                                                                     *
- * This file is part of HDF5.  The full HDF5 copyright notice, including     *
- * terms governing use, modification, and redistribution, is contained in    *
- * the COPYING file, which can be found at the root of the source code       *
- * distribution tree, or in https://support.hdfgroup.org/ftp/HDF5/releases.  *
- * If you do not have access to either file, you may request a copy from     *
- * help@hdfgroup.org.                                                        *
- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-
 /*
- *  This example illustrates how to create a dataset that is a 4 x 6
- *  array. It is used in the HDF5 Tutorial.
+ * main.cpp
+ * Copyright (C) 2018 davidpatrick <davidpatrick@Lees-MBP.fios-router.home>
+ *
+ * Distributed under terms of the MIT license.
  */
 
+
+#include <highfive/H5File.hpp>
+#include <highfive/H5DataSet.hpp>
+#include <highfive/H5DataSpace.hpp>
 #include <iostream>
-#include <string>
-#include "H5Cpp.h"
-using namespace H5;
+#include <boost/numeric/ublas/matrix.hpp>
+#include <boost/numeric/ublas/io.hpp> 
 
-const H5std_string	FILE_NAME("h5tutr_dset.h5");
-const H5std_string	DATASET_NAME("dset");
-const int	 NX = 4;                     // dataset dimensions
-const int	 NY = 6;
-const int	 RANK = 2;
+#include "bender.h"
 
-int main (void)
-{
-    // Try block to detect exceptions raised by any of the calls inside it
-    try
-    {
-	// Turn off the auto-printing when failure occurs so that we can
-	// handle the errors appropriately
-	Exception::dontPrint();
 
-	// Create a new file using the default property lists. 
-	H5File file(FILE_NAME, H5F_ACC_TRUNC);
+using namespace boost::numeric::ublas;
+using namespace HighFive;
+int main(){
+	
+	
+	bender bendy;
+	//Initialize All variables 
+	bendy.initializeData();	
+	int onoff = 0;
+	//Switch for L-J Repulsion; 1 = ON, 0 = OFF
+	int DenseEffect = 1e0;
+	//How much movement is affected due to induced viscosity	
+	//SPRING = 1;
+	//Determine the linear or nonlinear spring; 0:=no spring, 1:= linear
+	//2:= nonlinear
+	//LT = 1;
+	//Determine the line tension type; 1:=sharp boundary, 2:= interface
+	int STOP = 0;
+	//Indication if any abnormal behavior is detected. Generally this is
+	//done by checking the existence of large magnitude of movement. 
+	//Normal = 0, Abnormal = 1;	
+	int MAXSTEP = 1;	
+	//Starting Main Loop
+	bendy.printData(bendy.node);	
+	
+	for(int step =1;step<=MAXSTEP;step++){
+		for(int i=1;i<5;i++){
+			bendy.CANDIDATE = bendy.getRow(bendy.elem, bendy.edge2elem(i-1,0)-1);		
+			bendy.CANDIDATE2 = bendy.getRow(bendy.elem, bendy.edge2elem(i-1,1)-1);	
+			if(bendy.ismember(bendy.edge2elem(i-1,0)-1,bendy.OMEGA1) ==1 && bendy.ismember(bendy.edge2elem(i-1,1)-1,bendy.OMEGA1) ==1){
+				bendy.theta0 = bendy.theta0b;			
+				bendy.kb = bendy.kbp;
+			}
+			else if(bendy.ismember(bendy.edge2elem(i-1,0)-1,bendy.OMEGA1) ==0 && bendy.ismember(bendy.edge2elem(i-1,0)-1,bendy.OMEGA) ==1&&bendy.ismember(bendy.edge2elem(i-1,1)-1,bendy.OMEGA1) ==1){
+				bendy.theta0 = (bendy.theta0b + bendy.theta0m)/2;
+				bendy.kb = (bendy.kbp + bendy.kbb)/2;
+			}
+			else if(bendy.ismember(bendy.edge2elem(i-1,0)-1,bendy.OMEGA) ==1&&bendy.ismember(bendy.edge2elem(i-1,1)-1,bendy.OMEGA) ==0){
+				bendy.theta0 = bendy.theta0m;
+				bendy.kb = bendy.kbb;
+			}
+			else if(bendy.ismember(bendy.edge2elem(i-1,0)-1,bendy.OMEGA) ==1 && bendy.ismember(bendy.edge2elem(i-1,1)-1,bendy.OMEGA1) ==0 &&bendy.ismember(bendy.edge2elem(i-1,1)-1,bendy.OMEGA) ==0){
+				bendy.theta0 = bendy.theta0m;
+				bendy.kb = (bendy.kbb + bendy.kbm)/2;
+			}
+			else if(bendy.ismember(bendy.edge2elem(i-1,0)-1,bendy.OMEGA) ==0 && bendy.ismember(bendy.edge2elem(i-1,0)-1,bendy.OMEGA1) == 0 &&bendy.ismember(bendy.edge2elem(i-1,1)-1,bendy.OMEGA) ==1){
+				bendy.theta0 = bendy.theta0m;
+				bendy.kb = (bendy.kbb + bendy.kbm)/2;
+			}
+			else{
+				bendy.theta0 = bendy.theta0m;
+				bendy.kb = bendy.kbm;	
+			
+			}
+		bendy.HEAD = bendy.setdiff(bendy.CANDIDATE, bendy.getRow(bendy.edgeinfo, i));			
+		bendy.TAIL = bendy.setdiff(bendy.CANDIDATE2, bendy.getRow(bendy.edgeinfo, i));	
 
-	// Create the data space for the dataset.
-	hsize_t dims[2];               // dataset dimensions
-	dims[0] = NX;
-	dims[1] = NY;
-	DataSpace dataspace(RANK, dims);
+		//TODO: Skip bending, elas_F_liquid_ordered 
 
-	// Create the dataset.      
-	DataSet dataset = file.createDataSet(DATASET_NAME, PredType::STD_I32BE, dataspace);
-
-    }  // end of try block
-
-    // catch failure caused by the H5File operations
-    catch(FileIException error)
-    {
-	error.printError();
-	return -1;
-    }
-
-    // catch failure caused by the DataSet operations
-    catch(DataSetIException error)
-    {
-	error.printError();
-	return -1;
-    }
-
-    // catch failure caused by the DataSpace operations
-    catch(DataSpaceIException error)
-    {
-	error.printError();
-	return -1;
-    }
-
-    return 0;  // successfully terminated
+		}//ith for loop end bracket	
+	}//steph for loop end bracket
+	return 0;
 }
-
