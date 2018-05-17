@@ -39,12 +39,12 @@ int main(){
 	//Normal = 0, Abnormal = 1;	
 	int MAXSTEP = 1;	
 	//Starting Main Loop
-	bendy.printData(bendy.node);	
 	
 	for(int step =1;step<=MAXSTEP;step++){
-		for(int i=1;i<5;i++){
+		for(int i=1;i<2;i++){
 			bendy.CANDIDATE = bendy.getRow(bendy.elem, bendy.edge2elem(i-1,0)-1);		
 			bendy.CANDIDATE2 = bendy.getRow(bendy.elem, bendy.edge2elem(i-1,1)-1);	
+			//std::cout<<"Candidate2: "<<bendy.CANDIDATE2<<std::endl;
 			if(bendy.ismember(bendy.edge2elem(i-1,0)-1,bendy.OMEGA1) ==1 && bendy.ismember(bendy.edge2elem(i-1,1)-1,bendy.OMEGA1) ==1){
 				bendy.theta0 = bendy.theta0b;			
 				bendy.kb = bendy.kbp;
@@ -70,12 +70,25 @@ int main(){
 				bendy.kb = bendy.kbm;	
 			
 			}
-		bendy.HEAD = bendy.setdiff(bendy.CANDIDATE, bendy.getRow(bendy.edgeinfo, i));			
-		bendy.TAIL = bendy.setdiff(bendy.CANDIDATE2, bendy.getRow(bendy.edgeinfo, i));	
+		bendy.HEAD = bendy.setdiff(bendy.CANDIDATE, bendy.getRow(bendy.edgeinfo, i-1));			
+		bendy.TAIL = bendy.setdiff(bendy.CANDIDATE2, bendy.getRow(bendy.edgeinfo, i-1));	
 
 		//TODO: Skip bending, elas_F_liquid_ordered 
 
+		bendy.rj = bendy.getRow(bendy.node, bendy.HEAD(0)-1);
+		bendy.rl = bendy.getRow(bendy.node, bendy.TAIL(0)-1);
+		bendy.rk = bendy.getRow(bendy.node, bendy.edgeinfo(i-1,0)-1);
+		bendy.ri = bendy.getRow(bendy.node, bendy.edgeinfo(i-1,1)-1);
+		//Skipping Calculating movement based on bending
+		//until BENDING function is fixed, moving onto
+		//Elastic Force
+		bendy.elasF = bendy.elas_F_liquid_ordered(bendy.node, bendy.nndata, bendy.ksp, bendy.ksb, bendy.ksm, bendy.R0b, bendy.R0m, bendy.OMEGA3, bendy.LIQUID_ORDERED_NODE);		
+			    std::cout<<"Please work"<<std::endl;
+		//Elastic Force 
+		
 		}//ith for loop end bracket	
 	}//steph for loop end bracket
+
+
 	return 0;
 }

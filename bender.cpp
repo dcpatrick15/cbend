@@ -92,7 +92,6 @@ bool bender::ismember(double edge, boost::numeric::ublas::matrix<double> mat){
 	for(auto itr1 = mat.begin1(); itr1!=mat.end1(); ++itr1){
 		for(auto itr2 = itr1.begin(); itr2!=itr1.end(); ++itr2){
 			if(edge == *itr2){
-				std::cout<<"Edge: "<<edge<<"\n *itr2:  "<<*itr2<<std::endl;
 				found = true;
 				break;	
 			}	
@@ -131,6 +130,51 @@ void bender::printData(boost::numeric::ublas::matrix<double> mat){
 		std::cout<<""<<std::endl;
 	}
 }
+//elas_F_liquid_ordered
+boost::numeric::ublas::matrix<double> bender::elas_F_liquid_ordered(boost::numeric::ublas::matrix<double> node, boost::numeric::ublas::matrix<double> nndata,double ksp, double ksb,double ksm, double R0b, double R0m, boost::numeric::ublas::matrix<double> OMEGA3, boost::numeric::ublas::matrix<double> LIQUID_ORDERED_NODE){
+	//For now, we'll use this uncapetlized version, can't come up with
+	//any unique names
+	boost::numeric::ublas::matrix<double> elasf;
+	boost::numeric::ublas::matrix<double> NetF;
+	boost::numeric::ublas::vector<double> Rij(3);
+	double mRij;
+	double ks;
+	double R0;
+	//std::cout<<"ndata.size2(): "<<nndata.size2()<<std::endl;	
+	
+	//std::cout<<"getrow: "<<this->getRow(node, nndata(5,3)-1) <<std::endl;
+	//std::cout<<nndata<<std::endl;
+	//node.size1()
+	for(int m =1;m<=5;m++){
+		for(int j =1;j<=nndata.size2();j++){
+			if(nndata(m-1,j-1)> 0){
+				Rij = this->getRow(node, nndata(m-1,j-1)-1) - this->getRow(node, m-1);	
+				mRij = boost::numeric::ublas::norm_2(Rij);
+	
+				if(this->ismember(m,OMEGA3)==1 && this->ismember(nndata(m-1,j-1), OMEGA3) ==1){
+				ks = ksp;
+				R0 = R0b;
+				}
+				else if(this->ismember(m,OMEGA3)==1 && this->ismember(nndata(m-1,j-1), LIQUID_ORDERED_NODE) ==1){
+
+				ks = (ksp + ksb)/2;
+				R0 = (R0b + R0b)/2;
+				//Don't go any further until above is further clarified
+				}
+				
+				
+				
+			}
+
+
+		}	
+	
+	
+	}
+
+	//std::cout<<this->getRow(node, nndata(5,2)-1) <<std::endl;
+	return elasf;
+}
 //initializeData()
 void bender::initializeData(){
 	//Load Matrices and Vectors here
@@ -158,5 +202,12 @@ void bender::initializeData(){
 	this->kbb = this->getSingleValue("/kbb");
 	this->kbp = this->getSingleValue("/kbp");
 	this->kbm = this->getSingleValue("/kbm");
-
+	this->nndata = this->createMatrix("/nndata", 817,6);
+	this->OMEGA3 = this->createMatrix("/OMEGA3", 31,1);
+	this->LIQUID_ORDERED_NODE = this->createMatrix("/LIQUID_ORDERED_NODE", 211,1);
+	this->ksp = this->getSingleValue("/ksp");
+	this->ksb = this->getSingleValue("/ksb");
+	this->ksm = this->getSingleValue("/ksm");
+	this->R0b = this->getSingleValue("/R0b");
+	this->R0m = this->getSingleValue("/R0m");
 }

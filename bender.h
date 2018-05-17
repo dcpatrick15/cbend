@@ -42,7 +42,10 @@ class bender{
 		bool ismember(double, boost::numeric::ublas::matrix<double>);
 		//setdiff
 		boost::numeric::ublas::vector<double> setdiff(boost::numeric::ublas::vector<double>, boost::numeric::ublas::vector<double>);
-
+		/*
+		 *Converted Kevin Functions
+		 */	
+		boost::numeric::ublas::matrix<double> elas_F_liquid_ordered(boost::numeric::ublas::matrix<double>, boost::numeric::ublas::matrix<double>,double, double, double, double,double, boost::numeric::ublas::matrix<double>, boost::numeric::ublas::matrix<double> );
 
 	struct {
 		//Copying in hdf5 structured data when needed
@@ -63,8 +66,13 @@ class bender{
 		boost::numeric::ublas::matrix<double> OMEGA;
 		boost::numeric::ublas::matrix<double> OMEGA1;
 		boost::numeric::ublas::matrix<double> OMEGA2;
+		boost::numeric::ublas::matrix<double> OMEGA3;
 		boost::numeric::ublas::vector<double> HEAD;
 		boost::numeric::ublas::vector<double> TAIL;
+		boost::numeric::ublas::vector<double> rj;
+		boost::numeric::ublas::vector<double> rl;
+		boost::numeric::ublas::vector<double> rk;
+		boost::numeric::ublas::vector<double> ri;
 		double theta0;
 		double theta0b;
 		double theta0m;
@@ -72,6 +80,14 @@ class bender{
 		double kbb;
 		double kbp;
 		double kbm;	
+		boost::numeric::ublas::matrix<double> nndata;
+		double ksp;
+		double ksb;
+		double ksm; 
+		double R0b; 
+		double R0m;
+		boost::numeric::ublas::matrix<double> LIQUID_ORDERED_NODE;
+		boost::numeric::ublas::matrix<double> elasF;
 	};
 
 };
